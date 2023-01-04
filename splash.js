@@ -132,7 +132,7 @@ function setKernelMode(modestring, preserveHeight){
 
   const{ATARI_WIDTH, ATARI_STARTHEIGHT, 
         SCREEN_WIDTH_PER, SCREEN_HEIGHT_PER, ATARI_MAXHEIGHT, LINEHEIGHTS,
-        DOWNLOADS, MININUM,
+        DOWNLOADS, MININUM, OVERLAYS,
         MULTICOLORBG , DESCRIPTION} = mode;
 
 
@@ -296,14 +296,47 @@ if(currentKernelMode.MULTICOLOR && ! currentShowingUploadedImage){
   }
 } 
 
+if(currentKernelMode.OVERLAYS) {
+  currentKernelMode.OVERLAYS.forEach( (fn) => fn() );
+}
 
 noLoop();
 
 }
 
 
+function drawPFOverlay() {
+  // overlay pf divisions here
+  let pf0x = PIXW * 4, pf1x = PIXW * 12, pf2x = PIXW * 20;
+  stroke(0,0,255);
+  noFill();
+  drawingContext.setLineDash([5, 5]);
+  strokeWeight(1);
+  line(pf0x, 0, pf0x, height);
+  line(pf1x, 0, pf1x, height);
+  line(pf2x, 0, pf2x, height);
+  if (currentKernelMode.PIXDUP === 'mirror') {
+    // mirror
+    line(width - pf0x, 0, width - pf0x, height);
+    line(width - pf1x, 0, width - pf1x, height);
+  } else {
+    // repeat
+    line(pf2x + pf0x, 0, pf2x + pf0x, height);
+    line(pf2x + pf1x, 0, pf2x + pf1x, height);
+  }
+}
 
+function drawHOverlay(spacing) {
+  // horizontal divisions
+  for (let y = 0; y < height; y += PIXH * spacing) {
+    line(0, y, width, y);
+  }
+}
 
+function drawTestSprite(height) {
+  // character
+  ellipse(10,10,20,20);
+}
 
 function mousePressed() {
 
