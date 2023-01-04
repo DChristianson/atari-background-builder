@@ -333,9 +333,12 @@ function drawHOverlay(spacing) {
   }
 }
 
-function drawTestSprite(height) {
-  // character
-  ellipse(10,10,20,20);
+function drawTestSprite() {
+  fill(255, 255, 0);
+  ellipse(
+    width / 2,
+    height / 2,
+    8 * PIXW / 4);
 }
 
 function mousePressed() {
