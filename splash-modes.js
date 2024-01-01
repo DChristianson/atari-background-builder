@@ -289,7 +289,7 @@ const modes = {
     DESCRIPTION: '96 pixel, 2-line color mini-kernel to be inserted in titlescreen zip contents.',
   },
 
-  scrollSymPFMirroredx2: {
+  scrollAsmPFMirroredx2: {
     ATARI_WIDTH: 40,
     ATARI_MAXHEIGHT: 256,
     ATARI_STARTHEIGHT: 128,
@@ -297,13 +297,12 @@ const modes = {
     SCREEN_HEIGHT_PER: 4,
     MULTICOLOR: true,
     DOWNLOADS: {
-      "asm": { file: "r9PF.asm", action: (file) => { download(file, codeASMpfSymMirroredScrollable(2)); } },
+      "asm": { file: "r9PF.asm", action: (file) => { download(file, codeASMpfAsymRepeatedScrollable(2)); } },
       "macro": { file: "macro.h", action: downloadMacro },
       "vcs": { file: "vcs.h", action: downloadVCS }
     },
     NAME: 'ASM Scrollable Playfield (2 scanline)',
-    DESCRIPTION: 'Scrollable Symmetrical Playfield (Mirrored) kernel, per scanline color change.',
-    PIXDUP: 'mirror',
+    DESCRIPTION: 'Scrollable Asymmetrical Playfield (Repeated) kernel, per scanline color change.',
     OVERLAYS: [
       () => { drawPFOverlay() },
       () => { drawHOverlay(16) },

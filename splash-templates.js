@@ -572,6 +572,24 @@ function makeColumnBlock(start, stop) {
    return buf;
 }
 
+
+function makeTileBlock(start, stop, line, height) {
+   const length = (stop - start) - ((start > stop) ? 1 : -1);
+   let buf = '';
+   for (let y = (line + height) - 1; y >= line; y--) {
+      buf += getByteBuff(yxGrid[y], start, length, '	.byte %', '1', '0');
+   }
+   return buf;
+}
+
+function makeColumnTiles(start, stop, num_tiles, tile_height) {
+   const tiles = [];
+   for (let n = 0; n < num_tiles; n++) {
+      tiles[n] = makeTileBlock(start, stop, tile_height * n, tile_height);
+   }
+   return tiles;
+}
+
 function codeASMpfAssymRepeated(playfield_line_height) {
    const PFColors = makeColorBytes();
    const PF0DataA = makeColumnBlock(3, 0);
@@ -1673,152 +1691,83 @@ ${buf}
 `;
 }
 
-function codeASMpfSymMirroredScrollable(playfield_line_height) {
-   const PFColors = makeColorBytes();
-   const PF0DataA = makeColumnBlock(3, 0);
-   const PF1DataA = makeColumnBlock(4, 11);
-   const PF2DataA = makeColumnBlock(19, 12);
+function codeASMpfAsymRepeatedScrollable(playfield_line_height) {
 
-   return `    processor 6502
-    include "vcs.h"
-    include "macro.h"
-    SEG.U VARS
-    ORG $80
+   const PF1Data = makeColumnTiles(4, 11, 8, 16);
+   const PF2Data = makeColumnTiles(19, 12, 8, 16);
+   const PF3Data = makeColumnTiles(23, 20, 8, 16);
+   const PF4Data = makeColumnTiles(24, 31, 8, 16);
 
-; $80
-Temp                        ds 1
-PlayFieldHeightCounter      ds 1
-PlayFieldLinesCounter       ds 1
+   return `  
 
-kernel_lines=192
-playfield_lines=${H}
-playfield_line_height=${playfield_line_height}
-padding_lines=1
+PLAYFIELD_PF1_0
+${PF1Data[0]}
+PLAYFIELD_PF1_1
+${PF1Data[1]}
+PLAYFIELD_PF1_2
+${PF1Data[2]}
+PLAYFIELD_PF1_3
+${PF1Data[3]}
+PLAYFIELD_PF1_4
+${PF1Data[4]}
+PLAYFIELD_PF1_5
+${PF1Data[5]}
+PLAYFIELD_PF1_6
+${PF1Data[6]}
+PLAYFIELD_PF1_7
+${PF1Data[7]}
 
-playfield_scanlines=#playfield_lines*#playfield_line_height
-remaining_lines=#kernel_lines-#playfield_scanlines-#padding_lines+3
+PLAYFIELD_PF2_0
+${PF2Data[0]}
+PLAYFIELD_PF2_1
+${PF2Data[1]}
+PLAYFIELD_PF2_2
+${PF2Data[2]}
+PLAYFIELD_PF2_3
+${PF2Data[3]}
+PLAYFIELD_PF2_4
+${PF2Data[4]}
+PLAYFIELD_PF2_5
+${PF2Data[5]}
+PLAYFIELD_PF2_6
+${PF2Data[6]}
+PLAYFIELD_PF2_7
+${PF2Data[7]}
 
+PLAYFIELD_PF3_0
+${PF3Data[0]}
+PLAYFIELD_PF3_1
+${PF3Data[1]}
+PLAYFIELD_PF3_2
+${PF3Data[2]}
+PLAYFIELD_PF3_3
+${PF3Data[3]}
+PLAYFIELD_PF3_4
+${PF3Data[4]}
+PLAYFIELD_PF3_5
+${PF3Data[5]}
+PLAYFIELD_PF3_6
+${PF3Data[6]}
+PLAYFIELD_PF3_7
+${PF3Data[7]}
 
-NO_ILLEGAL_OPCODES = 0
+PLAYFIELD_PF4_0
+${PF4Data[0]}
+PLAYFIELD_PF4_1
+${PF4Data[1]}
+PLAYFIELD_PF4_2
+${PF4Data[2]}
+PLAYFIELD_PF4_3
+${PF4Data[3]}
+PLAYFIELD_PF4_4
+${PF4Data[4]}
+PLAYFIELD_PF4_5
+${PF4Data[5]}
+PLAYFIELD_PF4_6
+${PF4Data[6]}
+PLAYFIELD_PF4_7
+${PF4Data[7]}
 
-
-   SEG CODE
-   ORG $F000
-Start:
-   CLEAN_START
-
-   lda #1
-   sta CTRLPF   ; Mirrored playfield
-
-NextFrame
-
-	VERTICAL_SYNC
-    lda #44
-    sta TIM64T
-
-; My VBLANK code
-
-
-    
-    
-WaitVBlank
-    lda INTIM
-    bne WaitVBlank ; loop until timer expires
-    sta WSYNC
-    sta VBLANK
-
-    ldx #padding_lines
-PaddingLoop
-    sta WSYNC
-    dex
-    bne PaddingLoop
-
-    ldx #playfield_lines-1
-    lda #playfield_line_height
-    sta PlayFieldHeightCounter
-
-
-PlayfieldLoop
-    sta WSYNC                       ; 3     (0)
-    lda PFColors,x                  ; 4     (4)
-    sta COLUPF                      ; 3     (7)
-    lda PF0DataA,x                  ; 4     (11)
-    sta PF0                         ; 3     (14)
-    lda PF1DataA,x                  ; 4     (18)
-    sta PF1                         ; 3     (21)
-    lda PF2DataA,x                  ; 4     (25*)
-    sta PF2                         ; 3     (28)
-    dec PlayFieldHeightCounter      ; 5     (56)
-    bne ____skip_new_row            ; 2/3   (58/59)
-    lda #playfield_line_height      ; 2     (60)
-    sta PlayFieldHeightCounter      ; 3     (63)
-    dex                             ; 2     (65)
-    beq ____done_playfield_rows     ; 2/3   (67)
-____skip_new_row
-    jmp PlayfieldLoop               ; 3     (70)
-
-
-
-____done_playfield_rows
-    lda #0
-    sta PF0
-    sta PF1
-    sta PF2
-    ldx #remaining_lines
-VisibleScreen
-    sta WSYNC
-    dex
-    bne VisibleScreen
-    
-SetupOS
-    lda #36
-    sta TIM64T
-    lda #2
-    sta WSYNC
-    sta VBLANK
-
-
-
-            
-WaitOverscan
-    lda INTIM
-    bne WaitOverscan
-    sta WSYNC
-    
-    jmp NextFrame
-
-   if >. != >[.+(playfield_lines)]
-      align 256
-   endif
-
-PF0DataA
-${PF0DataA}
-
-   if >. != >[.+(playfield_lines)]
-      align 256
-   endif
-
-PF1DataA
-${PF1DataA}
-
-   if >. != >[.+(playfield_lines)]
-      align 256
-   endif
-
-PF2DataA
-${PF2DataA}
-
-   if >. != >[.+(playfield_lines)]
-      align 256
-   endif
-
-PFColors
-${PFColors}
-
-    ECHO ([$FFFC-.]d), "bytes free"
-
-    org $fffc
-    .word Start
-    .word Start
 `;
+
 }
