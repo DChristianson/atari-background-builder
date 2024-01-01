@@ -1691,83 +1691,35 @@ ${buf}
 `;
 }
 
+function produceTiles(header, tiles, dups) {
+   var buf = ''
+   for (let i = 0; i < tiles.length; i++) {
+      let tile = tiles[i];
+      let key = `${header}_${i}`;
+      let dupkey = dups[tile];
+      if (dupkey) {
+         buf += `\n${key} = ${dupkey}`;
+      } else {
+         dups[tile] = key;
+         buf += `\n${key}\n${tile}`;
+      }
+   }
+   return buf
+}
+
 function codeASMpfAsymRepeatedScrollable(playfield_line_height) {
 
-   const PF1Data = makeColumnTiles(4, 11, 8, 16);
-   const PF2Data = makeColumnTiles(19, 12, 8, 16);
-   const PF3Data = makeColumnTiles(23, 20, 8, 16);
-   const PF4Data = makeColumnTiles(24, 31, 8, 16);
+   dups = {}
+   const PF1Data = produceTiles('PF1_PLAYFIELD', makeColumnTiles(4, 11, 8, 16), dups);
+   const PF2Data = produceTiles('PF2_PLAYFIELD', makeColumnTiles(19, 12, 8, 16), dups);
+   const PF3Data = produceTiles('PF3_PLAYFIELD', makeColumnTiles(23, 20, 8, 16), dups);
+   const PF4Data = produceTiles('PF4_PLAYFIELD', makeColumnTiles(24, 31, 8, 16), dups);
 
    return `  
-
-PLAYFIELD_PF1_0
-${PF1Data[0]}
-PLAYFIELD_PF1_1
-${PF1Data[1]}
-PLAYFIELD_PF1_2
-${PF1Data[2]}
-PLAYFIELD_PF1_3
-${PF1Data[3]}
-PLAYFIELD_PF1_4
-${PF1Data[4]}
-PLAYFIELD_PF1_5
-${PF1Data[5]}
-PLAYFIELD_PF1_6
-${PF1Data[6]}
-PLAYFIELD_PF1_7
-${PF1Data[7]}
-
-PLAYFIELD_PF2_0
-${PF2Data[0]}
-PLAYFIELD_PF2_1
-${PF2Data[1]}
-PLAYFIELD_PF2_2
-${PF2Data[2]}
-PLAYFIELD_PF2_3
-${PF2Data[3]}
-PLAYFIELD_PF2_4
-${PF2Data[4]}
-PLAYFIELD_PF2_5
-${PF2Data[5]}
-PLAYFIELD_PF2_6
-${PF2Data[6]}
-PLAYFIELD_PF2_7
-${PF2Data[7]}
-
-PLAYFIELD_PF3_0
-${PF3Data[0]}
-PLAYFIELD_PF3_1
-${PF3Data[1]}
-PLAYFIELD_PF3_2
-${PF3Data[2]}
-PLAYFIELD_PF3_3
-${PF3Data[3]}
-PLAYFIELD_PF3_4
-${PF3Data[4]}
-PLAYFIELD_PF3_5
-${PF3Data[5]}
-PLAYFIELD_PF3_6
-${PF3Data[6]}
-PLAYFIELD_PF3_7
-${PF3Data[7]}
-
-PLAYFIELD_PF4_0
-${PF4Data[0]}
-PLAYFIELD_PF4_1
-${PF4Data[1]}
-PLAYFIELD_PF4_2
-${PF4Data[2]}
-PLAYFIELD_PF4_3
-${PF4Data[3]}
-PLAYFIELD_PF4_4
-${PF4Data[4]}
-PLAYFIELD_PF4_5
-${PF4Data[5]}
-PLAYFIELD_PF4_6
-${PF4Data[6]}
-PLAYFIELD_PF4_7
-${PF4Data[7]}
-
+${PF1Data}
+${PF2Data}
+${PF3Data}
+${PF4Data}
 `;
 
 }
